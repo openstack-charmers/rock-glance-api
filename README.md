@@ -17,7 +17,7 @@ it will help ensure that all layers of the image are imported
 into docker (this is just the top layer).
 
 ```bash
-> skopeo --insecure-policy copy oci-archive:glance_yoga.rock docker-daemon:glance_rock:yoga
+> skopeo --insecure-policy copy oci-archive:glance_yoga.rock docker-daemon:glance:yoga
 ```
 
 If you are interested in giving it a go in Microk8s, you can
@@ -25,7 +25,7 @@ export the image from your docker registry and then into the
 microk8s registry:
 
 ```bash
-> docker save glance_rock:yoga > /tmp/glance-rock.tar
+> docker save glance:yoga > /tmp/glance-rock.tar
 > microk8s ctr image import /tmp/glance-rock.tar
 ```
 
