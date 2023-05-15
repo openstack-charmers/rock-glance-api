@@ -2,7 +2,7 @@ name: glance
 summary: OpenStack Glance
 description: Ubuntu distribution of OpenStack Glance
 license: Apache-2.0
-version: yoga
+version: antelope
 
 base: ubuntu:22.04
 platforms:
@@ -18,40 +18,27 @@ platforms:
 services:
     apache forwarder:
         summary: apache
-        startup: disabled
         override: replace
         command: /usr/sbin/apache2ctl -DFOREGROUND
     glance-api:
         summary: glance-api standalone
-        startup: disabled
         override: replace
         command: /usr/bin/glance-api --config-file /etc/glance/glance-api.conf
 
 parts:
-  # Note(gboutry) glance user does not seem necessary
-  glance-user:
-    plugin: nil
-    overlay-script: |
-      groupadd --root $CRAFT_OVERLAY --gid 42415 --system glance
-      useradd \
-        --gid glance \
-        --uid 42415 \
-        --no-create-home \
-        --home /var/lib/glance \
-        --root $CRAFT_OVERLAY \
-        --system \
-        --shell /bin/false \
-        glance
-
   glance:
-    after: [glance-user]
     plugin: nil
     overlay-packages:
-      - apache2
-      - glance-api
-      - qemu-utils
-      - nfs-common
-      - ceph-common
-      - python3-netifaces
-    overlay:
-      - -etc/apache2/sites-enabled/000-default.conf
+      - software-properties-common
+    overlay-script: |
+      mount /etc/resolv.conf $CRAFT_OVERLAY/etc/resolv.conf --bind
+      mount proc $CRAFT_OVERLAY/proc -t proc
+      mount sysfs $CRAFT_OVERLAY/sys -t sysfs
+      mount /dev $CRAFT_OVERLAY/dev --rbind --make-private
+      chroot $CRAFT_OVERLAY add-apt-repository cloud-archive:antelope
+      chroot $CRAFT_OVERLAY apt update
+      chroot $CRAFT_OVERLAY bash -c "DEBIAN_FRONTEND=noninteractive apt install apache2 glance-api qemu-utils nfs-common ceph-common python3-netifaces --yes"
+      umount --recursive $CRAFT_OVERLAY/dev
+      umount $CRAFT_OVERLAY/sys
+      umount $CRAFT_OVERLAY/proc
+      umount $CRAFT_OVERLAY/etc/resolv.conf
